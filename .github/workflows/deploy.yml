@@ -33,7 +33,7 @@ jobs:
       with:
         context: ./frontend
         push: true
-        tags: your-dockerhub-username/your-frontend-image:latest
+        tags: docker/dev-environments-default:stable-1
         
     - name: Deploy to Kubernetes
       uses: azure/k8s-deploy@v4
@@ -49,5 +49,5 @@ jobs:
           k8s/frontend-deployment.yaml
           k8s/ingress.yaml
         images: |
-          fengjy209/dev-environments-default:stable-1
-          fengjy209/dev-environments-default:stable-1
+          docker/dev-environments-default:stable-1
+          docker/dev-environments-default:stable-1

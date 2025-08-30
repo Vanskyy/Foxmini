@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: fengjy209/dev-environments-default:stable-1  # 替换为您的前端镜像
+        image: docker/dev-environments-default:stable-1  # 替换为您的前端镜像
         ports:
         - containerPort: 80
         env:
