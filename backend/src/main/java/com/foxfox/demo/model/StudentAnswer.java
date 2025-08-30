@@ -1,8 +1,9 @@
 //学生答案
 package com.foxfox.demo.model;
 
+// 学生阶段作答记录：关联学生、阶段、发布实例。支持多次保存（finalSubmit=false），最终提交标记 finalSubmit=true。
+// CODE 题目使用 codeContent 存源码，其它题型 answerContent 存答案/选项串。
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -20,43 +21,43 @@ public class StudentAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "answer_id")
-    private Integer id;
+    private Integer id; // 主键
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false,
             foreignKey = @ForeignKey(name = "student_answers_ibfk_1"))
-    private User user;
+    private User user; // 学生
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stage_id", nullable = false,
             foreignKey = @ForeignKey(name = "student_answers_ibfk_2"))
-    private ExperimentStage stage;
+    private ExperimentStage stage; // 阶段
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "publish_id", nullable = false,
             foreignKey = @ForeignKey(name = "student_answers_ibfk_3"))
-    private PublishedExperiment publishedExperiment;
+    private PublishedExperiment publishedExperiment; // 发布实例
 
     @Lob
     @Column(name = "answer_content", columnDefinition = "text")
-    private String answerContent;
+    private String answerContent; // 非代码题答案（选择题字母串 / 填空拼接等）
 
     @Lob
     @Column(name = "code_content", columnDefinition = "text")
-    private String codeContent;
+    private String codeContent; // 代码题源码
 
     @Column(name = "submitted_at")
-    private LocalDateTime submittedAt;
+    private LocalDateTime submittedAt; // 最终提交时间
 
     @Column(name = "is_final", nullable = false)
-    private boolean finalSubmit = false;//是否为最终提交，不是则作为自动保存使用
+    private boolean finalSubmit = false; // 是否最终提交
 
     @UpdateTimestamp
     @Column(name = "saved_at", nullable = false)
-    private LocalDateTime savedAt;
+    private LocalDateTime savedAt; // 最近保存时间
 
     @OneToOne(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Evaluation evaluation;
+    private Evaluation evaluation; // 评测结果
 
     // helpers
     public void setEvaluation(Evaluation evaluation) {

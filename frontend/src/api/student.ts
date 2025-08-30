@@ -7,7 +7,12 @@ export interface StudentProfileResponse {
   username: string
   grade?: string
   major?: string
-  // 后端当前返回中未包含 realName/phone/email，如后端补充再添加
+  // 新增字段 (后端已扩展)
+  realName?: string
+  email?: string
+  studentId?: string
+  className?: string
+  updatedAt?: string
 }
 
 // 更新请求 (允许这些字段传给后端，后端目前只处理已存在字段)
@@ -17,6 +22,8 @@ export interface UpdateStudentProfileRequest {
   major?: string
   phone?: string
   email?: string
+  studentId?: string
+  className?: string
 }
 
 // 历史实验记录项 (字段名与后端 StudentExperimentHistoryItem 对齐)

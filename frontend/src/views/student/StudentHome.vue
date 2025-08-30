@@ -79,11 +79,13 @@ const editingProfile = ref(false)
 const profileForm = ref<UpdateStudentProfileRequest>({})
 function startEditProfile(){
   profileForm.value = {
-    realName: auth.user?.realName,
+    realName: profile.value?.realName || auth.user?.realName,
+    email: profile.value?.email || auth.user?.email,
+    studentId: profile.value?.studentId,
+    className: profile.value?.className,
     grade: profile.value?.grade,
     major: profile.value?.major,
     phone: undefined,
-    email: undefined,
   }
   editingProfile.value = true
 }
@@ -118,6 +120,14 @@ function markAllRead(){
 
 function openExperiment(id: number) {
   router.push({ name: 'student-experiment-detail', params: { id } })
+}
+
+function formatTime(v?: string){
+  if(!v) return '-'
+  const d = new Date(v)
+  if(isNaN(d.getTime())) return v
+  const pad = (n:number)=> n<10? '0'+n : ''+n
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 </script>
 
@@ -164,12 +174,33 @@ function openExperiment(id: number) {
         <div class="profile-box" v-else-if="!editingProfile">
           <ul class="profile-list">
             <li><span class="pl-label">用户名</span><span class="pl-value">{{ profile?.username || auth.user?.username }}</span></li>
-            <li><span class="pl-label">年级</span><span class="pl-value">{{ profile?.grade || '-' }}</span></li>
+            <li><span class="pl-label">姓名</span><span class="pl-value">{{ profile?.realName || auth.user?.realName || '-' }}</span></li>
+            <li><span class="pl-label">邮箱</span><span class="pl-value">{{ profile?.email || auth.user?.email || '-' }}</span></li>
+            <li><span class="pl-label">学号</span><span class="pl-value">{{ profile?.studentId || '-' }}</span></li>
+            <li><span class="pl-label">班级</span><span class="pl-value">{{ profile?.className || '-' }}</span></li>
             <li><span class="pl-label">专业</span><span class="pl-value">{{ profile?.major || '-' }}</span></li>
+            <li><span class="pl-label">年级</span><span class="pl-value">{{ profile?.grade || '-' }}</span></li>
+            <li><span class="pl-label">更新时间</span><span class="pl-value">{{ formatTime(profile?.updatedAt) }}</span></li>
           </ul>
         </div>
         <div class="profile-box" v-else>
           <form class="profile-form" @submit.prevent="saveProfile">
+            <div class="form-row">
+              <label>姓名</label>
+              <input v-model="profileForm.realName" placeholder="真实姓名" />
+            </div>
+            <div class="form-row">
+              <label>邮箱</label>
+              <input v-model="profileForm.email" placeholder="邮箱" type="email" />
+            </div>
+            <div class="form-row">
+              <label>学号</label>
+              <input v-model="profileForm.studentId" placeholder="学号" />
+            </div>
+            <div class="form-row">
+              <label>班级</label>
+              <input v-model="profileForm.className" placeholder="班级" />
+            </div>
             <div class="form-row">
               <label>年级</label>
               <input v-model="profileForm.grade" placeholder="如 2023" />
@@ -333,7 +364,7 @@ button.primary.small:hover { background:#1d4ed8; box-shadow:0 4px 12px -4px rgba
 
 /* 欢迎页样式 */
 .welcome-panel { text-align:center; padding:60px 40px; display:flex; flex-direction:column; gap:18px; }
-.welcome-title { margin:0; font-size:28px; font-weight:600; background:linear-gradient(90deg,#3b82f6,#2563eb); -webkit-background-clip:text; color:transparent; }
+.welcome-title { margin:0; font-size:28px; font-weight:600; background:linear-gradient(90deg,#3b82f6,#2563eb); -webkit-background-clip:text; background-clip: text; color:transparent; }
 .welcome-tip { margin:0; font-size:15px; color:#475569; }
 .welcome-sub { margin:0; font-size:13px; color:#64748b; }
 

@@ -55,4 +55,9 @@ public class TeacherExperimentController {
         return teacherExperimentService.list(teacherUserId, status, keyword, pageable);
     }
 
+    @DeleteMapping("/{teacherUserId}/{experimentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable int teacherUserId, @PathVariable int experimentId) {
+        teacherExperimentService.delete(teacherUserId, experimentId);
+    }
 }

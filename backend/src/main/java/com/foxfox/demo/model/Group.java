@@ -47,5 +47,14 @@ public class Group {
         m.setGroup(null);
     }
 
-    // getters & setters
+    public Integer getId() { return id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public List<GroupMember> getMembers() { return members; }
+    public void setMembers(List<GroupMember> members) { this.members = members; }
 }

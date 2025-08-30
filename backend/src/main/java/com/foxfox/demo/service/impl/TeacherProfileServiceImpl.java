@@ -40,18 +40,14 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
         TeacherProfile profile = teacherProfileRepository.findByUser(user)
                 .orElseThrow(() -> new IllegalArgumentException("教师档案不存在"));
 
-        if (request.getTitle() != null) {
-            try {
-                profile.getClass().getMethod("setTitle", String.class).invoke(profile, request.getTitle());
-            } catch (Exception ignored) {}
-        }
-        if (request.getDepartment() != null) {
-            try {
-                profile.getClass().getMethod("setDepartment", String.class).invoke(profile, request.getDepartment());
-            } catch (Exception ignored) {}
-        }
+        if (request.getTitle() != null) { try { profile.getClass().getMethod("setTitle", String.class).invoke(profile, request.getTitle()); } catch (Exception ignored) {} }
+        if (request.getDepartment() != null) { try { profile.getClass().getMethod("setDepartment", String.class).invoke(profile, request.getDepartment()); } catch (Exception ignored) {} }
+        if (request.getTeacherId() != null) { try { profile.getClass().getMethod("setTeacherId", String.class).invoke(profile, request.getTeacherId()); } catch (Exception ignored) {} }
+        if (request.getRealName() != null) { user.setRealName(request.getRealName()); }
+        if (request.getEmail() != null) { user.setEmail(request.getEmail()); }
 
-        teacherProfileRepository.save(profile);
+        userRepository.saveAndFlush(user);
+        teacherProfileRepository.saveAndFlush(profile);
         return toResp(user, profile);
     }
 
@@ -60,15 +56,15 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
         r.setUserId(user.getId());
         r.setTeacherProfileId(profile.getId());
         r.setUsername(user.getUsername());
-        // 反射读取可选字段，避免假设 model 属性名称不一致时报错
-        try {
-            Object title = profile.getClass().getMethod("getTitle").invoke(profile);
-            r.setTitle(title == null ? null : title.toString());
-        } catch (Exception ignored) {}
-        try {
-            Object dept = profile.getClass().getMethod("getDepartment").invoke(profile);
-            r.setDepartment(dept == null ? null : dept.toString());
-        } catch (Exception ignored) {}
+        r.setRealName(user.getRealName());
+        r.setEmail(user.getEmail());
+        r.setAvatar(user.getAvatar());
+        // 使用 profile 的时间戳（若需要同时返回用户的也可新增字段）
+        try { Object title = profile.getClass().getMethod("getTitle").invoke(profile); r.setTitle(title == null ? null : title.toString()); } catch (Exception ignored) {}
+        try { Object dept = profile.getClass().getMethod("getDepartment").invoke(profile); r.setDepartment(dept == null ? null : dept.toString()); } catch (Exception ignored) {}
+        try { Object tid = profile.getClass().getMethod("getTeacherId").invoke(profile); r.setTeacherId(tid == null ? null : tid.toString()); } catch (Exception ignored) {}
+        try { Object created = profile.getClass().getMethod("getCreatedAt").invoke(profile); if(created!=null) r.setCreatedAt((java.time.LocalDateTime) created); } catch (Exception ignored) {}
+        try { Object updated = profile.getClass().getMethod("getUpdatedAt").invoke(profile); if(updated!=null) r.setUpdatedAt((java.time.LocalDateTime) updated); } catch (Exception ignored) {}
         return r;
     }
 }

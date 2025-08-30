@@ -90,6 +90,8 @@ public class StudentExperimentController {
     private Integer currentUserId() {
         // TODO: 集成 Spring Security 后替换
         // 临时：可通过线程上下文 / SecurityContextHolder 获取
+        //不考虑安全性
+
         return 1;
     }
 }

@@ -1,3 +1,3 @@
-<template><div class="removed">实验阶段表单已移除</div></template>
+<template><div class="removed">创建实验功能已移除</div></template>
 <script setup lang="ts">/* removed */</script>
 <style scoped>.removed{padding:20px;color:#64748b;font-size:14px;text-align:center;}</style>

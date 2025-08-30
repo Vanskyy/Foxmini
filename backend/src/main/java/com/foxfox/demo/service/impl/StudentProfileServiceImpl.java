@@ -1,4 +1,3 @@
-
 package com.foxfox.demo.service.impl;
 
 import com.foxfox.demo.dto.StudentExperimentHistoryItem;
@@ -21,6 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 public class StudentProfileServiceImpl implements StudentProfileService {
@@ -58,10 +58,21 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         StudentProfile profile = studentProfileRepository.findByUser(user)
                 .orElseThrow(() -> new IllegalArgumentException("学生档案不存在"));
 
-        if (req.getGrade() != null) profile.setGrade(req.getGrade());
-        if (req.getMajor() != null) profile.setMajor(req.getMajor());
+        boolean changed = false;
+        if (req.getGrade() != null) { profile.setGrade(req.getGrade()); changed = true; }
+        if (req.getMajor() != null) { profile.setMajor(req.getMajor()); changed = true; }
+        if (req.getStudentId() != null) { profile.setStudentId(req.getStudentId()); changed = true; }
+        if (req.getClassName() != null) { profile.setClassName(req.getClassName()); changed = true; }
+        if (req.getRealName() != null) { user.setRealName(req.getRealName()); changed = true; }
+        if (req.getEmail() != null) { user.setEmail(req.getEmail()); changed = true; }
+
+        if (changed) {
+            // 确保更新时间刷新：即使只改 profile 字段也更新 user.updatedAt
+            user.setUpdatedAt(LocalDateTime.now());
+        }
 
         studentProfileRepository.save(profile);
+        userRepository.save(user);
         return toResp(user, profile);
     }
 
@@ -127,6 +138,12 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         r.setUsername(user.getUsername());
         r.setGrade(profile.getGrade());
         r.setMajor(profile.getMajor());
+        // 新增字段赋值
+        r.setRealName(user.getRealName());
+        r.setEmail(user.getEmail());
+        r.setStudentId(profile.getStudentId());
+        r.setClassName(profile.getClassName());
+        r.setUpdatedAt(user.getUpdatedAt());
         return r;
     }
 }

@@ -58,6 +58,7 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
                 ExperimentStage stage = new ExperimentStage();
                 stage.setExperiment(experiment);
                 stage.setTitle(sReq.getTitle());
+                // description 作为题干，content 作为选项/补充，前端已区分
                 stage.setDescription(sReq.getDescription());
                 stage.setType(sReq.getType());
                 stage.setContent(sReq.getContent());
@@ -92,13 +93,17 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
         return new ExperimentCreatedResponse(experiment.getId(), stageIds, resourceIds);
     }
 
+    // 构建评测标准：选择题 correctOptions 以紧凑字符串（如 "BC"）存入 correctAnswer
     private EvaluationCriteria buildEvaluationCriteria(ExperimentStage stage,
                                                        ExperimentStageCreateRequest sReq) {
         EvaluationCriteriaCreateRequest ev = sReq.getEvaluation();
         EvaluationCriteria criteria = new EvaluationCriteria();
         criteria.setStage(stage);
+        criteria.setType(stage.getType());
         if (ev.getCorrectOptions() != null) {
-            criteria.setCorrectAnswer(ev.getCorrectOptions());
+            // 去除逗号和空白，形成紧凑字符串
+            String compact = ev.getCorrectOptions().replaceAll("[\\s,]+", "").toUpperCase();
+            criteria.setCorrectAnswer(compact);
         }
         if (ev.getFillAnswers() != null) {
             criteria.setCorrectAnswer(ev.getFillAnswers());
@@ -169,6 +174,15 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
         return page.map(this::toResp);
     }
 
+    @Override
+    @Transactional
+    public void delete(int teacherUserId, int experimentId) {
+        Experiment exp = experimentRepository.findById(experimentId)
+                .orElseThrow(() -> new IllegalArgumentException("实验不存在"));
+        verifyOwner(exp, teacherUserId);
+        experimentRepository.delete(exp);
+    }
+
     private void verifyOwner(Experiment exp, int teacherUserId) {
         Integer ownerId = readUserId(exp, "getCreator", "getOwner", "getPublisher");
         if (ownerId == null || ownerId != teacherUserId) {
@@ -214,6 +228,8 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
         r.setObjective(readString(exp, "getObjective"));
         r.setStatus(readString(exp, "getStatus"));
         r.setOwnerUserId(readUserId(exp, "getCreator", "getOwner", "getPublisher"));
+        try { r.setCreatedAt((java.time.LocalDateTime) exp.getClass().getMethod("getCreatedAt").invoke(exp)); } catch (Exception ignored) {}
+        try { r.setUpdatedAt((java.time.LocalDateTime) exp.getClass().getMethod("getUpdatedAt").invoke(exp)); } catch (Exception ignored) {}
         // 填充阶段列表
         List<ExperimentStage> stageEntities = stageRepository.findByExperiment_IdOrderBySequenceAsc(r.getId());
         r.setStages(stageEntities.stream()

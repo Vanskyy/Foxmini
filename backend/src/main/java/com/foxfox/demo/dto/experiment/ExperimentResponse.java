@@ -1,5 +1,6 @@
 package com.foxfox.demo.dto.experiment;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class ExperimentResponse {
@@ -11,6 +12,8 @@ public class ExperimentResponse {
     private Integer ownerUserId;
     // 新增：阶段列表
     private List<ExperimentStageResponse> stages;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -26,4 +29,8 @@ public class ExperimentResponse {
     public void setOwnerUserId(Integer ownerUserId) { this.ownerUserId = ownerUserId; }
     public List<ExperimentStageResponse> getStages() { return stages; }
     public void setStages(List<ExperimentStageResponse> stages) { this.stages = stages; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

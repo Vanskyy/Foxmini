@@ -4,6 +4,7 @@ import com.foxfox.demo.dto.BatchAddStudentsResult;
 import com.foxfox.demo.dto.BatchRemoveStudentsResult;
 import com.foxfox.demo.model.Group;
 import com.foxfox.demo.model.GroupMember;
+import com.foxfox.demo.model.Role;
 import com.foxfox.demo.model.User;
 import com.foxfox.demo.repository.GroupMemberRepository;
 import com.foxfox.demo.repository.GroupRepository;
@@ -39,6 +40,9 @@ public class GroupMoveService {
                 .orElseThrow(() -> new EntityNotFoundException("分组不存在"));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("用户不存在"));
+        if(user.getRole() != Role.STUDENT){
+            throw new IllegalStateException("只能添加学生用户");
+        }
         GroupMember gm = new GroupMember();
         gm.setGroup(group);
         gm.setUser(user);
@@ -61,6 +65,9 @@ public class GroupMoveService {
                 .orElseThrow(() -> new EntityNotFoundException("学生不在原分组"));
         if (groupMemberRepository.existsByGroup_IdAndUser_Id(toGroupId, userId)) {
             throw new IllegalStateException("学生已在目标分组");
+        }
+        if(gm.getUser().getRole() != Role.STUDENT){
+            throw new IllegalStateException("只能移动学生用户");
         }
         Group toGroup = groupRepository.findById(toGroupId)
                 .orElseThrow(() -> new EntityNotFoundException("目标分组不存在"));
@@ -97,8 +104,12 @@ public class GroupMoveService {
                 .filter(id -> !foundIds.contains(id))
                 .toList();
 
+        // 过滤非学生
+        List<User> studentUsers = users.stream().filter(u -> u.getRole() == Role.STUDENT).toList();
+        List<Integer> nonStudentIds = users.stream().filter(u -> u.getRole() != Role.STUDENT).map(User::getId).toList();
+
         // 构造并保存
-        List<GroupMember> newMembers = users.stream()
+        List<GroupMember> newMembers = studentUsers.stream()
                 .map(u -> {
                     GroupMember gm = new GroupMember();
                     gm.setGroup(group);
@@ -108,10 +119,13 @@ public class GroupMoveService {
                 .toList();
         groupMemberRepository.saveAll(newMembers);
 
-        List<Integer> success = users.stream().map(User::getId).toList();
+        List<Integer> success = studentUsers.stream().map(User::getId).toList();
+        // 将非学生视为 notFound 的扩展（前端需提示）
+        List<Integer> finalNotFound = new ArrayList<>(notFound);
+        finalNotFound.addAll(nonStudentIds);
         return new BatchAddStudentsResult(success,
                 new ArrayList<>(alreadyInGroup),
-                notFound);
+                finalNotFound);
     }
 
     @Transactional

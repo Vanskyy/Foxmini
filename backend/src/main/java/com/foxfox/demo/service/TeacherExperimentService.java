@@ -1,4 +1,3 @@
-
 package com.foxfox.demo.service;
 
 import com.foxfox.demo.dto.experiment.ExperimentCreateRequest;
@@ -13,5 +12,5 @@ public interface TeacherExperimentService {
     ExperimentResponse update(int teacherUserId, int experimentId, ExperimentUpdateRequest request);
     ExperimentResponse get(int teacherUserId, int experimentId);
     Page<ExperimentResponse> list(int teacherUserId, String status, String keyword, Pageable pageable);
-
+    void delete(int teacherUserId, int experimentId);
 }

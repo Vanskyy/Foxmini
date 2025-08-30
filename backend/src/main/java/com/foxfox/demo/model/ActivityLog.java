@@ -1,4 +1,5 @@
-//记录用户活动
+// 用户行为日志实体：记录用户在系统中的关键操作（登录、创建、修改、删除等），方便审计与追踪。
+// 建议：后续可加枚举 action 分类，或 details 中存 JSON 结构便于查询。
 package com.foxfox.demo.model;
 
 
@@ -18,35 +19,35 @@ public class ActivityLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "log_id")
-    private Integer id;
+    private Integer id; // 主键
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false,
             foreignKey = @ForeignKey(name = "activity_logs_ibfk_1"))
-    private User user;
+    private User user; // 触发该行为的用户
 
     @Column(nullable = false, length = 50)
-    private String action;
+    private String action; // 动作标识（如 LOGIN, CREATE_EXPERIMENT）
 
     @Column(name = "entity_type", length = 50)
-    private String entityType;
+    private String entityType; // 关联实体类型（如 Experiment, Stage）
 
     @Column(name = "entity_id")
-    private Integer entityId;
+    private Integer entityId; // 关联实体ID
 
     @Lob
     @Column(columnDefinition = "text")
-    private String details;
+    private String details; // 详细信息（可 JSON）
 
     @Column(name = "ip_address", length = 45)
-    private String ipAddress;
+    private String ipAddress; // 发起请求的客户端IP
 
     @Column(name = "user_agent", length = 255)
-    private String userAgent;
+    private String userAgent; // UA 信息
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 记录创建时间
 
     // getters & setters
     public Integer getId() {

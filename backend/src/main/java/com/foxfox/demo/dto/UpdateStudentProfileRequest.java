@@ -6,6 +6,9 @@ public class UpdateStudentProfileRequest {
     private String major;
     private String phone;
     private String email;
+    // 新增字段
+    private String studentId; // 学号
+    private String className; // 班级
 
     public String getRealName() {
         return realName;
@@ -36,5 +39,17 @@ public class UpdateStudentProfileRequest {
     }
     public void setEmail(String email) {
         this.email = email;
+    }
+    public String getStudentId() {
+        return studentId;
+    }
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
+    }
+    public String getClassName() {
+        return className;
+    }
+    public void setClassName(String className) {
+        this.className = className;
     }
 }

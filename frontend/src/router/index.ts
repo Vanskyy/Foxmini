@@ -7,7 +7,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/student', name: 'student-home', component: () => import('../views/student/StudentHome.vue') },
   { path: '/student/experiment/:id', name: 'student-experiment-detail', component: () => import('../views/student/ExperimentDetail.vue'), props: true },
   { path: '/teacher', name: 'teacher-home', component: () => import('../views/teacher/TeacherHome.vue') },
-  { path: '/teacher/experiment/:id', name: 'teacher-experiment-detail', component: () => import('../views/teacher/TeacherExperimentDetail.vue'), props: true },
+  { path: '/teacher/experiment/create', name: 'teacher-experiment-create', component: () => import('../views/teacher/TeacherExperimentCreate.vue') },
   { path: '/admin', name: 'admin-home', component: () => import('../views/admin/AdminHome.vue') },
   { path: '/', redirect: '/login' },
 ]
