@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: docker/dev-environments-default:stable-1 # 替换为您的后端镜像
+        image: fengjy209/dev-environments-default:stable-1 # 替换为您的后端镜像
         ports:
         - containerPort: 8080
         env:
