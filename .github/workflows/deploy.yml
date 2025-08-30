@@ -49,5 +49,5 @@ jobs:
           k8s/frontend-deployment.yaml
           k8s/ingress.yaml
         images: |
-          your-dockerhub-username/your-backend-image:latest
-          your-dockerhub-username/your-frontend-image:latest
+          fengjy209/dev-environments-default:stable-1
+          fengjy209/dev-environments-default:stable-1
