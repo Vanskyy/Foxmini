@@ -26,14 +26,18 @@ jobs:
       with:
         context: ./backend
         push: true
-        tags: your-dockerhub-username/your-backend-image:latest
+      tags: |
+        fengjy209/foxmini-backend:latest
+        fengjy209/foxmini-backend:${{ github.sha }}
         
     - name: Build and push frontend image
       uses: docker/build-push-action@v4
       with:
         context: ./frontend
         push: true
-        tags: docker/dev-environments-default:stable-1
+        tags: |
+          fengjy209/foxmini-frontend:latest
+          fengjy209/foxmini-frontend:${{ github.sha }}
         
     - name: Deploy to Kubernetes
       uses: azure/k8s-deploy@v4
@@ -49,5 +53,5 @@ jobs:
           k8s/frontend-deployment.yaml
           k8s/ingress.yaml
         images: |
-          docker/dev-environments-default:stable-1
-          docker/dev-environments-default:stable-1
+          fengjy209/foxmini-backend:latest
+          fengjy209/foxmini-frontend:latest
