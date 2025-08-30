@@ -9,7 +9,7 @@ RUN npm install
 
 # 复制源代码并构建
 COPY . .
-RUN npm run build
+RUN npm run build-only
 
 # 第二阶段：生产环境阶段
 FROM nginx:alpine AS production-stage
