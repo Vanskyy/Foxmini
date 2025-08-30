@@ -1,6 +1,6 @@
 # 使用多阶段构建以减少最终镜像大小
 # 第一阶段：构建阶段
-FROM maven:3.8.5-eclipse-temurin-17 AS build
+FROM maven:3.8.5-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # 复制pom.xml和源代码
