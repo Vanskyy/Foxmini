@@ -1,0 +1,29 @@
+package com.foxfox.demo.dto.experiment;
+
+import java.util.List;
+
+public class ExperimentResponse {
+    private Integer id;
+    private String title;
+    private String description;
+    private String objective;
+    private String status;
+    private Integer ownerUserId;
+    // 新增：阶段列表
+    private List<ExperimentStageResponse> stages;
+
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getObjective() { return objective; }
+    public void setObjective(String objective) { this.objective = objective; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public Integer getOwnerUserId() { return ownerUserId; }
+    public void setOwnerUserId(Integer ownerUserId) { this.ownerUserId = ownerUserId; }
+    public List<ExperimentStageResponse> getStages() { return stages; }
+    public void setStages(List<ExperimentStageResponse> stages) { this.stages = stages; }
+}
