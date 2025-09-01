@@ -1,57 +1,136 @@
-name: Deploy to Kubernetes
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
-    
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-      
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
-    - name: Build and push backend image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./backend
-        push: true
-      tags: |
-        fengjy209/foxmini-backend:latest
-        fengjy209/foxmini-backend:${{ github.sha }}
-        
-    - name: Build and push frontend image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./frontend
-        push: true
-        tags: |
-          fengjy209/foxmini-frontend:latest
-          fengjy209/foxmini-frontend:${{ github.sha }}
-        
-    - name: Deploy to Kubernetes
-      uses: azure/k8s-deploy@v4
-      with:
-        namespace: my-app
-        manifests: |
-          k8s/namespace.yaml
-          k8s/mysql-secret.yaml
-          k8s/mysql-pvc.yaml
-          k8s/mysql-deployment.yaml
-          k8s/backend-config.yaml
-          k8s/backend-deployment.yaml
-          k8s/frontend-deployment.yaml
-          k8s/ingress.yaml
-        images: |
-          fengjy209/foxmini-backend:latest
-          fengjy209/foxmini-frontend:latest
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置Java环境
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 设置Node.js环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: 安装后端依赖
+        working-directory: ./backend
+        run: mvn dependency:resolve
+
+      - name: 构建后端
+        working-directory: ./backend
+        run: |
+          mvn clean package -DskipTests
+
+      - name: 安装前端依赖
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 构建前端
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: 卸载现有应用
+        run: |
+          echo "卸载现有Foxmini应用..."
+          
+          # 删除前端服务
+          kubectl delete -f k8s/frontend-deployment.yaml --ignore-not-found=true || true
+          
+          # 删除后端服务
+          kubectl delete -f k8s/backend-deployment.yaml --ignore-not-found=true || true
+          
+          # 删除MySQL相关资源
+          kubectl delete -f k8s/mysql-deployment.yaml --ignore-not-found=true || true
+          
+          # 删除配置和密钥
+          kubectl delete -f k8s/mysql-configmap.yaml --ignore-not-found=true || true
+          kubectl delete -f k8s/mysql-secret.yaml --ignore-not-found=true || true
+          
+          # 删除命名空间（这会删除命名空间内的所有资源）
+          kubectl delete namespace foxmini-app --ignore-not-found=true || true
+          
+          # 等待命名空间删除完成
+          kubectl wait --for=delete namespace/foxmini-app --timeout=300s 2>/dev/null || true
+          
+          echo "卸载完成，开始重新部署..."
+
+      - name: 构建Docker镜像
+        run: |
+          docker rmi foxmini-backend:latest
+          docker rmi foxmini-frontend:latest
+          docker rmi foxmini-database:latest
+          # 构建后端镜像
+          docker build -t fengjy209/foxmini-backend:latest -f backend/Dockerfile backend --load
+          
+          # 构建前端镜像
+          docker build -t fengjy209/foxmini-frontend:latest -f frontend/Dockerfile frontend --load
+          
+          # 构建数据库镜像
+          docker build -t fengjy209/foxmini-database:latest -f database/Dockerfile database --load
+
+      - name: 部署到Kubernetes
+        run: |
+          # 创建命名空间
+          kubectl apply -f k8s/namespace.yaml
+          
+          # 部署MySQL
+          kubectl apply -f k8s/mysql-secret.yaml
+          kubectl apply -f k8s/mysql-configmap.yaml
+          kubectl apply -f k8s/mysql-deployment.yaml
+          
+          # 等待MySQL就绪
+          kubectl wait --for=condition=ready pod -l app=foxmini-database -n foxmini-app --timeout=300s
+          
+          # 部署后端
+          kubectl apply -f k8s/backend-deployment.yaml
+          
+          # 部署前端
+          kubectl apply -f k8s/frontend-deployment.yaml
+          
+          # 等待服务就绪
+          kubectl wait --for=condition=ready pod -l app=foxmini-backend -n foxmini-app --timeout=300s
+          kubectl wait --for=condition=ready pod -l app=foxmini-frontend -n foxmini-app --timeout=300s
+
+      - name: 验证部署状态
+        run: |
+          echo "部署完成！查看服务状态："
+          kubectl get all -n foxmini-app
+          
+          echo "查看Pod状态："
+          kubectl get pods -n foxmini-app
+          
+          echo "查看服务端口："
+          kubectl get svc -n foxmini-app
+
+      - name: 部署成功通知
+        if: success()
+        run: |
+          echo "✅ Foxmini应用部署成功！"
+          echo "🌐 访问地址: http://localhost:30080"
+          echo "📊 查看状态: kubectl get all -n foxmini-app"
+
+      - name: 部署失败通知
+        if: failure()
+        run: |
+          echo "❌ Foxmini应用部署失败！"
+          echo "📋 查看日志: kubectl logs -f deployment/foxmini-backend -n foxmini-app"
+          echo "🔍 查看Pod状态: kubectl describe pods -n foxmini-app"
+
+    

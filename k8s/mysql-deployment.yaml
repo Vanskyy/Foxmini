@@ -1,68 +1,80 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-deployment
-  namespace: my-app
-  labels:
-    app: mysql
+  name: foxmini-database
+  namespace: foxmini-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql
+      app: foxmini-database
   template:
     metadata:
       labels:
-        app: mysql
+        app: foxmini-database
     spec:
       containers:
-      - name: mysql
-        image: mysql:8.0
+      - name: foxmini-database
+        image: fengjy209/foxmini-database:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3306
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secret
-              key: mysql-root-password
+              key: root-password
         - name: MYSQL_DATABASE
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: mysql-database
+          value: "foxmini_db"
         - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: mysql-username
+          value: "foxmini_user"
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secret
-              key: mysql-password
-        ports:
-        - containerPort: 3306
+              key: password
         volumeMounts:
-        - name: mysql-storage
+        - name: mysql-config
+          mountPath: /etc/mysql/conf.d
+        - name: mysql-data
           mountPath: /var/lib/mysql
-        - name: init-script
-          mountPath: /docker-entrypoint-initdb.d
       volumes:
-      - name: mysql-storage
+      - name: mysql-config
+        configMap:
+          name: mysql-config
+      - name: mysql-data
         persistentVolumeClaim:
           claimName: mysql-pvc
-      - name: init-script
-        configMap:
-          name: mysql-init-script
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
-  namespace: my-app
+  name: foxmini-database
+  namespace: foxmini-app
 spec:
   selector:
-    app: mysql
+    app: foxmini-database
   ports:
-    - protocol: TCP
-      port: 3306
-      targetPort: 3306
+  - port: 3306
+    targetPort: 3306
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: foxmini-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi 

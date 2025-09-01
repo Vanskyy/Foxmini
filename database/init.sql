@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS foxmini_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE foxmini_db;
+
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
