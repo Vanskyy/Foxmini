@@ -111,27 +111,27 @@ jobs:
 
       - name: 验证部署状态
         run: |
-          echo "部署完成！查看服务状态："
+          echo "部署完成！查看服务状态:"
           kubectl get all -n foxmini-app
           
-          echo "查看Pod状态："
+          echo "查看Pod状态:"
           kubectl get pods -n foxmini-app
           
-          echo "查看服务端口："
+          echo "查看服务端口:"
           kubectl get svc -n foxmini-app
 
       - name: 部署成功通知
         if: success()
         run: |
-          echo "✅ Foxmini应用部署成功！"
-          echo "🌐 访问地址: http://localhost:30080"
-          echo "📊 查看状态: kubectl get all -n foxmini-app"
+          echo "Foxmini应用部署成功!"
+          echo "访问地址: http://localhost:30080"
+          echo "查看状态: kubectl get all -n foxmini-app"
 
       - name: 部署失败通知
         if: failure()
         run: |
-          echo "❌ Foxmini应用部署失败！"
-          echo "📋 查看日志: kubectl logs -f deployment/foxmini-backend -n foxmini-app"
-          echo "🔍 查看Pod状态: kubectl describe pods -n foxmini-app"
+          echo "Foxmini应用部署失败!"
+          echo "See Logs: kubectl logs -f deployment/foxmini-backend -n foxmini-app"
+          echo "See Pod Status: kubectl describe pods -n foxmini-app"
 
     
