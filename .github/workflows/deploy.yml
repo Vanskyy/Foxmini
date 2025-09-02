@@ -47,6 +47,7 @@ jobs:
         run: npm run build
 
       - name: 卸载现有应用
+        shell: bash
         run: |
           echo "卸载现有Foxmini应用..."
           
