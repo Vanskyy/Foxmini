@@ -47,7 +47,7 @@ jobs:
         run: npm run build
 
       - name: 卸载现有应用
-        shell: bash
+        shell: "D:\\Git\\bin\\bash.exe --noprofile --norc -e -o pipefail {0}"
         run: |
           echo "卸载现有Foxmini应用..."
           
