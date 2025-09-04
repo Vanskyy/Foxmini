@@ -129,7 +129,7 @@ function stageStatus(s: ExperimentStageResponse){
     if(ans.passed) return 'passed'
     return 'graded'
   }
-  return 'unanswered'
+  return 'draft'
 }
 
 const router = useRouter()
