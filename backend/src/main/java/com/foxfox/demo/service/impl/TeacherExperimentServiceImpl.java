@@ -58,7 +58,6 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
                 ExperimentStage stage = new ExperimentStage();
                 stage.setExperiment(experiment);
                 stage.setTitle(sReq.getTitle());
-                // description 作为题干，content 作为选项/补充，前端已区分
                 stage.setDescription(sReq.getDescription());
                 stage.setType(sReq.getType());
                 stage.setContent(sReq.getContent());
@@ -101,7 +100,6 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
         criteria.setStage(stage);
         criteria.setType(stage.getType());
         if (ev.getCorrectOptions() != null) {
-            // 去除逗号和空白，形成紧凑字符串
             String compact = ev.getCorrectOptions().replaceAll("[\\s,]+", "").toUpperCase();
             criteria.setCorrectAnswer(compact);
         }
@@ -127,6 +125,46 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
         if (req.getDescription() != null) setIfExists(exp, "setDescription", req.getDescription());
         if (req.getObjective() != null) setIfExists(exp, "setObjective", req.getObjective());
         if (req.getStatus() != null) setIfExists(exp, "setStatus", req.getStatus());
+
+        if (req.getStages() != null) {
+            exp.getStages().clear();
+            stageRepository.flush();
+            if (!req.getStages().isEmpty()) {
+                int idx = 0;
+                for (ExperimentStageCreateRequest sReq : req.getStages()) {
+                    ExperimentStage stage = new ExperimentStage();
+                    stage.setExperiment(exp);
+                    stage.setTitle(sReq.getTitle());
+                    stage.setDescription(sReq.getDescription());
+                    stage.setType(sReq.getType());
+                    stage.setContent(sReq.getContent());
+                    stage.setHint(sReq.getHint());
+                    stage.setMaxScore(sReq.getMaxScore() == null ? 0 : sReq.getMaxScore());
+                    stage.setSequence(sReq.getSequence() == null ? (++idx) : sReq.getSequence());
+                    if (sReq.getEvaluation() != null) {
+                        EvaluationCriteria criteria = buildEvaluationCriteria(stage, sReq);
+                        stage.setEvaluationCriteria(criteria);
+                    }
+                    exp.addStage(stage);
+                }
+            }
+        }
+
+        if (req.getResources() != null) {
+            exp.getResources().clear();
+            resourceRepository.flush();
+            if (!req.getResources().isEmpty()) {
+                for (ExperimentResourceCreateRequest rReq : req.getResources()) {
+                    ExperimentResource res = new ExperimentResource();
+                    res.setExperiment(exp);
+                    res.setName(rReq.getName());
+                    res.setType(rReq.getType());
+                    res.setUrl(rReq.getUrl());
+                    res.setSize(rReq.getSize());
+                    exp.addResource(res);
+                }
+            }
+        }
 
         experimentRepository.save(exp);
         return toResp(exp);
@@ -230,11 +268,12 @@ public class TeacherExperimentServiceImpl implements TeacherExperimentService {
         r.setOwnerUserId(readUserId(exp, "getCreator", "getOwner", "getPublisher"));
         try { r.setCreatedAt((java.time.LocalDateTime) exp.getClass().getMethod("getCreatedAt").invoke(exp)); } catch (Exception ignored) {}
         try { r.setUpdatedAt((java.time.LocalDateTime) exp.getClass().getMethod("getUpdatedAt").invoke(exp)); } catch (Exception ignored) {}
-        // 填充阶段列表
         List<ExperimentStage> stageEntities = stageRepository.findByExperiment_IdOrderBySequenceAsc(r.getId());
         r.setStages(stageEntities.stream()
                 .map(ExperimentStageResponse::from)
                 .collect(Collectors.toList()));
+        List<ExperimentResource> resourceEntities = resourceRepository.findByExperiment_Id(r.getId());
+        r.setResources(resourceEntities.stream().map(ExperimentResourceResponse::from).collect(Collectors.toList()));
         return r;
     }
 }

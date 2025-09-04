@@ -2,6 +2,7 @@ package com.foxfox.demo.repository;
 
 import com.foxfox.demo.model.ExperimentAssignment;
 import com.foxfox.demo.model.AssignmentTargetType;
+import com.foxfox.demo.model.PublishedExperiment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -40,4 +41,12 @@ public interface ExperimentAssignmentRepository extends JpaRepository<Experiment
            "   or (a.targetType = 'INDIVIDUAL' and a.targetId = :userId) " +
            "   or (a.targetType = 'GROUP' and gm.user.id = :userId))")
     List<ExperimentAssignment> findVisibleAssignmentsForUser(Integer publishId, Integer userId);
+
+    // 新增：查询用户可见的所有发布实验
+    @Query("select distinct a.publishedExperiment from ExperimentAssignment a " +
+           "left join GroupMember gm on a.targetType = 'GROUP' and a.targetId = gm.group.id " +
+           "where (a.targetType = 'ALL' " +
+           "   or (a.targetType = 'INDIVIDUAL' and a.targetId = :userId) " +
+           "   or (a.targetType = 'GROUP' and gm.user.id = :userId))")
+    List<PublishedExperiment> findVisiblePublishedExperimentsForUser(Integer userId);
 }

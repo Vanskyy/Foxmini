@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface TeacherExperimentService {
     ExperimentCreatedResponse createExperiment(Integer creatorId, ExperimentCreateRequest req);
+    // update: 现在支持标题/描述/状态 + stages/resources 全量替换（传空列表表示清空，不传表示不改）
     ExperimentResponse update(int teacherUserId, int experimentId, ExperimentUpdateRequest request);
     ExperimentResponse get(int teacherUserId, int experimentId);
     Page<ExperimentResponse> list(int teacherUserId, String status, String keyword, Pageable pageable);

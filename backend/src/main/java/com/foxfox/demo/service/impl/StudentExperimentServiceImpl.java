@@ -15,7 +15,6 @@ import com.foxfox.demo.model.ExperimentStage;
 import com.foxfox.demo.model.PublishedExperiment;
 import com.foxfox.demo.model.StudentAnswer;
 import com.foxfox.demo.model.User;
-import com.foxfox.demo.repository.ExperimentRepository;
 import com.foxfox.demo.repository.ExperimentStageRepository;
 import com.foxfox.demo.repository.PublishedExperimentRepository;
 import com.foxfox.demo.repository.StudentAnswerRepository;
@@ -35,20 +34,17 @@ import java.util.stream.Collectors;
 public class StudentExperimentServiceImpl implements StudentExperimentService {
 
     private final PublishedExperimentRepository publishedExperimentRepository;
-    private final ExperimentRepository experimentRepository;
     private final ExperimentStageRepository experimentStageRepository;
     private final StudentAnswerRepository studentAnswerRepository;
     private final UserRepository userRepository;
     private final EvaluationService evaluationService;
 
     public StudentExperimentServiceImpl(PublishedExperimentRepository publishedExperimentRepository,
-                                        ExperimentRepository experimentRepository,
                                         ExperimentStageRepository experimentStageRepository,
                                         StudentAnswerRepository studentAnswerRepository,
                                         UserRepository userRepository,
                                         EvaluationService evaluationService) {
         this.publishedExperimentRepository = publishedExperimentRepository;
-        this.experimentRepository = experimentRepository;
         this.experimentStageRepository = experimentStageRepository;
         this.studentAnswerRepository = studentAnswerRepository;
         this.userRepository = userRepository;
@@ -151,7 +147,11 @@ public class StudentExperimentServiceImpl implements StudentExperimentService {
     public StudentAnswerResponse getStageAnswer(Integer publishedExperimentId, Integer stageId, Integer userId) {
         return studentAnswerRepository
                 .findByUserIdAndStageIdAndPublishedExperimentId(userId, stageId, publishedExperimentId)
-                .map(StudentAnswerResponse::from)
+                .map(a -> {
+                    // 强制触发懒加载 evaluation (如果存在)
+                    if (a.getEvaluation() != null) { a.getEvaluation().getScore(); }
+                    return StudentAnswerResponse.from(a);
+                })
                 .orElse(null);
     }
 
@@ -180,6 +180,7 @@ public class StudentExperimentServiceImpl implements StudentExperimentService {
         answer.setAnswerContent(request.getAnswerContent());
         answer.setCodeContent(request.getCodeContent());
         StudentAnswer saved = studentAnswerRepository.save(answer);
+        if (saved.getEvaluation() != null) saved.getEvaluation().getScore();
         return StudentAnswerResponse.from(saved);
     }
 
@@ -202,15 +203,23 @@ public class StudentExperimentServiceImpl implements StudentExperimentService {
                     return a;
                 });
 
-        if (answer.isFinalSubmit()) {
-            throw new IllegalStateException("该阶段已最终提交，禁止重复提交");
+        // 新增：若已有满分评测结果则禁止再次提交
+        if (answer.getEvaluation() != null && stage.getMaxScore() != null) {
+            Integer prev = answer.getEvaluation().getScore();
+            if (prev != null && prev.equals(stage.getMaxScore())) {
+                throw new IllegalStateException("该阶段已获得满分，不能再次提交");
+            }
         }
+
+        // 允许重复最终提交：覆盖内容 & 更新时间 & 继续评测 (若未满分)
         if (request.getAnswerContent() != null) answer.setAnswerContent(request.getAnswerContent());
         if (request.getCodeContent() != null) answer.setCodeContent(request.getCodeContent());
         answer.setFinalSubmit(true);
         answer.setSubmittedAt(LocalDateTime.now());
 
         StudentAnswer saved = studentAnswerRepository.save(answer);
+        evaluationService.autoEvaluate(saved);
+        if (saved.getEvaluation() != null) saved.getEvaluation().getScore();
         return StudentAnswerResponse.from(saved);
     }
 
@@ -236,28 +245,25 @@ public class StudentExperimentServiceImpl implements StudentExperimentService {
                     return a;
                 });
 
-        if (answer.isFinalSubmit() && !request.isFinalSubmit()) {
-            // 已最终提交禁止再修改，但允许读取历史；此处直接返回最新历史
-            EvaluationHistoryResponse history = evaluationService.getHistory(answer);
-            List<EvaluationAttemptDTO> attempts = history.getAttempts();
-            return attempts == null || attempts.isEmpty() ? null : attempts.get(attempts.size() - 1);
+        // 新增：若已有满分评测结果则禁止再次提交（即时评测接口）
+        if (answer.getEvaluation() != null && stage.getMaxScore() != null) {
+            Integer prev = answer.getEvaluation().getScore();
+            if (prev != null && prev.equals(stage.getMaxScore())) {
+                throw new IllegalStateException("该阶段已获得满分，不能再次提交");
+            }
         }
 
+        // 不再阻止已 final 的再次提交；允许多次评测累积 attempts (但满分后已被阻止)
         answer.setAnswerContent(request.getAnswerContent());
         answer.setCodeContent(request.getCodeContent());
         if (request.isFinalSubmit()) {
-            if (answer.isFinalSubmit()) {
-                throw new IllegalStateException("该阶段已最终提交");
-            }
             answer.setFinalSubmit(true);
             answer.setSubmittedAt(LocalDateTime.now());
         }
         studentAnswerRepository.save(answer);
 
-        // 自动评测
         evaluationService.autoEvaluate(answer);
 
-        // 返回最新 attempt
         EvaluationHistoryResponse history = evaluationService.getHistory(answer);
         List<EvaluationAttemptDTO> attempts = history.getAttempts();
         return attempts == null || attempts.isEmpty() ? null : attempts.get(attempts.size() - 1);

@@ -10,6 +10,8 @@ public class AnnouncementResponse {
     private String content;
     private boolean important;
     private LocalDateTime createdAt;
+    // 新增：创建者用户ID，便于前端显示/鉴权
+    private Integer createdByUserId;
 
     public Integer getId() {
         return id;
@@ -57,5 +59,13 @@ public class AnnouncementResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getCreatedByUserId() {
+        return createdByUserId;
+    }
+
+    public void setCreatedByUserId(Integer createdByUserId) {
+        this.createdByUserId = createdByUserId;
     }
 }

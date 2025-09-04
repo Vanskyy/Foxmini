@@ -37,5 +37,6 @@ export function get<T = any>(url: string, config?: AxiosRequestConfig) { return 
 export function post<T = any>(url: string, data?: any, config?: AxiosRequestConfig) { return instance.post<T, T>(url, data, config) }
 export function put<T = any>(url: string, data?: any, config?: AxiosRequestConfig) { return instance.put<T, T>(url, data, config) }
 export function del<T = any>(url: string, config?: AxiosRequestConfig) { return instance.delete<T, T>(url, config) }
+export function patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig) { return instance.patch<T, T>(url, data, config) }
 
-export const http = { get, post, put, del, instance }
+export const http = { get, post, put, del, patch, instance }

@@ -31,4 +31,6 @@ public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, In
     Optional<StudentAnswer> findByStage_IdAndUser_IdAndPublishedExperiment_Id(Integer stageId,
                                                                               Integer userId,
                                                                               Integer publishId);
+
+    long countByPublishedExperimentId(Integer publishedExperimentId);
 }

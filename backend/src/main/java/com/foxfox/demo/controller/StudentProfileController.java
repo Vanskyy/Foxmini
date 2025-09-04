@@ -4,6 +4,7 @@ import com.foxfox.demo.dto.StudentExperimentHistoryItem;
 import com.foxfox.demo.dto.StudentProfileResponse;
 import com.foxfox.demo.dto.UpdateStudentProfileRequest;
 import com.foxfox.demo.service.StudentProfileService;
+import com.foxfox.demo.dto.experiment.StudentCurrentExperimentItem;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,5 +33,11 @@ public class StudentProfileController {
     @GetMapping("/{userId}/history")
     public List<StudentExperimentHistoryItem> history(@PathVariable int userId) {
         return studentProfileService.listHistory(userId);
+    }
+
+    // 当前未完成实验列表
+    @GetMapping("/{userId}/current-experiments")
+    public List<StudentCurrentExperimentItem> current(@PathVariable int userId) {
+        return studentProfileService.listCurrentExperiments(userId);
     }
 }

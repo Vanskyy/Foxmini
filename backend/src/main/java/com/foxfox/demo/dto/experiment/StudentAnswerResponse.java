@@ -14,6 +14,9 @@ public class StudentAnswerResponse implements Serializable {
     private boolean finalSubmit;
     private LocalDateTime savedAt;
     private LocalDateTime submittedAt;
+    private Integer score; // 最新得分
+    private String feedback; // 评测反馈
+    private Boolean passed; // 是否通过(满分)
 
     public StudentAnswerResponse() {}
 
@@ -32,7 +35,7 @@ public class StudentAnswerResponse implements Serializable {
 
     public static StudentAnswerResponse from(StudentAnswer entity) {
         if (entity == null) return null;
-        return new StudentAnswerResponse(
+        StudentAnswerResponse r = new StudentAnswerResponse(
                 entity.getId(),
                 entity.getStage() == null ? null : entity.getStage().getId(),
                 entity.getPublishedExperiment() == null ? null : entity.getPublishedExperiment().getId(),
@@ -42,6 +45,14 @@ public class StudentAnswerResponse implements Serializable {
                 entity.getSavedAt(),
                 entity.getSubmittedAt()
         );
+        if (entity.getEvaluation() != null) {
+            r.score = entity.getEvaluation().getScore();
+            r.feedback = entity.getEvaluation().getFeedback();
+            if (r.score != null && entity.getStage() != null && entity.getStage().getMaxScore() != null) {
+                r.passed = r.score.equals(entity.getStage().getMaxScore());
+            }
+        }
+        return r;
     }
 
     public Integer getAnswerId() { return answerId; }
@@ -52,4 +63,7 @@ public class StudentAnswerResponse implements Serializable {
     public boolean isFinalSubmit() { return finalSubmit; }
     public LocalDateTime getSavedAt() { return savedAt; }
     public LocalDateTime getSubmittedAt() { return submittedAt; }
+    public Integer getScore() { return score; }
+    public String getFeedback() { return feedback; }
+    public Boolean getPassed() { return passed; }
 }

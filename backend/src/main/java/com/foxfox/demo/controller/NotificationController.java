@@ -5,10 +5,9 @@ import com.foxfox.demo.model.User;
 import com.foxfox.demo.repository.NotificationRepository;
 import com.foxfox.demo.repository.UserRepository;
 import com.foxfox.demo.service.NotificationService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -35,12 +34,18 @@ public class NotificationController {
     }
 
     @GetMapping
-    public List<NotificationResponse> list() {
+    public Page<NotificationResponse> list(@RequestParam(value = "unread", required = false) Boolean unread,
+                                           @RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "20") int size) {
         Integer uid = currentUserId();
-        if (uid == null) return List.of();
-        return notificationRepository.findByUser_IdOrderByCreatedAtDesc(uid)
-                .stream().map(NotificationResponse::from)
-                .collect(Collectors.toList());
+        if (uid == null) return Page.empty();
+        PageRequest pr = PageRequest.of(page, size);
+        if (Boolean.TRUE.equals(unread)) {
+            return notificationRepository.findByUser_IdAndReadFalseOrderByCreatedAtDesc(uid, pr)
+                    .map(NotificationResponse::from);
+        }
+        return notificationRepository.findByUser_IdOrderByCreatedAtDesc(uid, pr)
+                .map(NotificationResponse::from);
     }
 
     @GetMapping("/unread-count")
@@ -54,5 +59,12 @@ public class NotificationController {
     public boolean markRead(@PathVariable Integer id) {
         Integer uid = currentUserId();
         return uid != null && notificationService.markRead(id, uid);
+    }
+
+    @PostMapping("/read-all")
+    public long readAll() {
+        Integer uid = currentUserId();
+        if (uid == null) return 0;
+        return notificationService.markAllRead(uid);
     }
 }

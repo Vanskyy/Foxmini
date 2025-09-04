@@ -4,14 +4,18 @@ import { useAuthStore } from '@/stores/modules/auth'
 import { apiGetTeacherProfile, apiUpdateTeacherProfile, type TeacherProfileResponse, type UpdateTeacherProfileRequest } from '@/api/teacher'
 import TeacherProfilePanel from './components/TeacherProfilePanel.vue'
 import TeacherExperimentManagePanel from './components/TeacherExperimentManagePanel.vue'
+import TeacherGroupPanel from './components/TeacherGroupPanel.vue'
+import TeacherAnnouncementPanel from './components/TeacherAnnouncementPanel.vue'
 
 // 仅保留个人信息
- type SectionKey = 'profile' | 'experiments'
+ type SectionKey = 'profile' | 'experiments' | 'groups' | 'announcements'
 const active = ref<SectionKey>('profile')
 const collapsed = ref(false)
 const menus = [
   { key: 'profile', label: '个人中心', icon: '👤' },
   { key: 'experiments', label: '实验管理', icon: '🧪' },
+  { key: 'groups', label: '小组管理', icon: '👥' },
+  { key: 'announcements', label: '公告管理', icon: '📢' },
 ]
 
 const auth = useAuthStore()
@@ -62,6 +66,14 @@ onMounted(()=>{ loadProfile() })
       <template v-else-if="active==='experiments'">
         <h1 class="page-title">实验管理</h1>
         <TeacherExperimentManagePanel />
+      </template>
+      <template v-else-if="active==='groups'">
+        <h1 class="page-title">小组管理</h1>
+        <TeacherGroupPanel />
+      </template>
+      <template v-else-if="active==='announcements'">
+        <h1 class="page-title">公告管理</h1>
+        <TeacherAnnouncementPanel />
       </template>
     </main>
   </div>

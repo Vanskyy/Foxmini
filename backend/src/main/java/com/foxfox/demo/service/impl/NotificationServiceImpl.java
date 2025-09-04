@@ -78,4 +78,14 @@ public class NotificationServiceImpl implements NotificationService {
                     return true;
                 }).orElse(false);
     }
+
+    @Override
+    @Transactional
+    public long markAllRead(Integer userId) {
+        List<Notification> list = notificationRepository.findByUser_IdOrderByCreatedAtDesc(userId)
+                .stream().filter(n -> !n.isRead()).collect(Collectors.toList());
+        list.forEach(n -> n.setRead(true));
+        notificationRepository.saveAll(list);
+        return list.size();
+    }
 }
